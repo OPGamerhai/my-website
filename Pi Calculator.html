@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pi Calculator</title>
+<style>
+:root{--bg:#f4f5f7;--panel:#fff;--fg:#14181f;--muted:#6a7280;--accent:#0b7a4b;--line:#d9dde3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b0f14;--panel:#111821;--fg:#d6e2ee;--muted:#7b8a9a;--accent:#3ddc97;--line:#1f2b38}}
+:root[data-theme="dark"]{--bg:#0b0f14;--panel:#111821;--fg:#d6e2ee;--muted:#7b8a9a;--accent:#3ddc97;--line:#1f2b38}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:20px 16px 28px}
+h1{margin:0 0 4px;font-size:1.5rem}
+h1 span{color:var(--accent)}
+p.sub{margin:0 0 16px;color:var(--muted);font-size:.9rem;line-height:1.4}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.stat small{display:block;color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em}
+.stat b{font:600 1rem ui-monospace,Menlo,Consolas,monospace}
+.screen{background:var(--panel);border:1px solid var(--line);border-radius:10px;height:52vh;min-height:260px;padding:14px;overflow-y:auto;overflow-x:hidden}
+#out{font:15px/1.5 ui-monospace,Menlo,Consolas,"Courier New",monospace;word-break:break-all;white-space:pre-wrap;color:var(--accent)}
+.cur{display:inline-block;width:.6em;height:1em;background:var(--accent);vertical-align:-2px;animation:b 1s steps(2) infinite}
+@keyframes b{50%{opacity:0}}
+.bar{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+button:hover{border-color:var(--accent)}
+#status{color:var(--muted);font-size:.85rem;margin-left:auto}
+.sub a{color:var(--accent);font-weight:600}
+footer{text-align:center;color:var(--muted);font-size:.85rem;margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.note{color:var(--muted);font-size:.78rem;margin-top:10px;line-height:1.4}
+</style>
+</head>
+<body>
+<main>
+<h1><span>π</span> Pi Calculator</h1>
+<p class="sub">Method: <a href="https://en.wikipedia.org/wiki/Approximations_of_pi" target="_blank" rel="noopener noreferrer">Chudnovsky algorithm</a>. Deliberately unoptimized: nothing is trimmed, nothing is freed, there is no memory guard. Leave it open long enough and the tab will crash. Scroll up to see the first digits.</p>
+<div class="stats">
+  <div class="stat"><small>Digits shown</small><b id="sShown">0</b></div>
+  <div class="stat"><small>Digits computed</small><b id="sComp">0</b></div>
+  <div class="stat"><small>Round</small><b id="sRound">0</b></div>
+  <div class="stat"><small>Elapsed</small><b id="sTime">0.0s</b></div>
+  <div class="stat"><small>Worker heap</small><b id="sMem">–</b></div>
+</div>
+<div class="screen"><div id="out"></div></div>
+<div class="bar">
+  <button id="bPause">Pause typing</button>
+  <button id="bStop">Stop</button>
+  <span id="status">Starting…</span>
+</div>
+<p class="note">Every digit stays in the DOM, every round's string is kept, and each round recomputes from scratch. Auto-scroll follows the newest digits; scroll up and it lets go, scroll back to the bottom and it follows again.</p>
+<footer>&copy; OP_Gamer_Hai</footer>
+</main>
+<script>
+// ---- Core math (also injected into the worker) ----
+function bs(a,b){
+  if(b-a===1){
+    let P,Q;
+    if(a===0){P=1n;Q=1n;}
+    else{const A=BigInt(a);P=(6n*A-5n)*(2n*A-1n)*(6n*A-1n);Q=A*A*A*10939058860032000n;}
+    let T=P*(13591409n+545140134n*BigInt(a));
+    if(a&1)T=-T;
+    return [P,Q,T];
+  }
+  const m=(a+b)>>1,l=bs(a,m),r=bs(m,b);
+  return [l[0]*r[0],l[1]*r[1],l[2]*r[1]+l[0]*r[2]];
+}
+function isqrt(n){
+  if(n<(1n<<52n))return BigInt(Math.floor(Math.sqrt(Number(n))));
+  const bits=n.toString(16).length*4,k=BigInt(bits>>2);
+  let x=isqrt(n>>(2n*k))<<k;
+  for(let i=0;i<64;i++){const y=(x+n/x)>>1n;const d=y>x?y-x:x-y;x=y;if(d<=1n)break;}
+  while(x*x>n)x--;
+  while((x+1n)*(x+1n)<=n)x++;
+  return x;
+}
+function computePi(digits){
+  const guard=10,prec=digits+guard,terms=Math.ceil(prec/14.18)+2;
+  const [,Q,T]=bs(0,terms);
+  const one=10n**BigInt(prec);
+  const sq=isqrt(10005n*one*one);
+  const pi=(Q*426880n*sq)/T;
+  return pi.toString().slice(0,digits+1); // "3" + digits
+}
+function heap(){const m=self.performance&&performance.memory;return m?{used:m.usedJSHeapSize,limit:m.jsHeapSizeLimit}:null;}
+// Rough peak-memory estimate (bytes) for a given digit count
+function estPeak(d){return d*17;}
+
+// ---- Runner: Worker with main-thread fallback ----
+const $=id=>document.getElementById(id);
+const out=$('out'),WIN=3000;
+let all='',shown=0,round=0,t0=performance.now(),paused=false,stopped=false,finished=false,worker=null,fallbackTimer=null;
+const GROW=1.6;
+
+function fmt(n){return n.toLocaleString('en-US');}
+function mb(b){return (b/1048576).toFixed(0)+' MB';}
+function setStatus(s){$('status').textContent=s;}
+
+function nextRoundDigits(prev){return prev?Math.floor(prev*GROW):1000;}
+const leak=[];
+
+function onRound(str,digits,mem,secs){
+  if(stopped)return;
+  all=str;leak.push(str);round++;
+  $('sComp').textContent=fmt(digits);
+  $('sRound').textContent=round;
+  if(mem)$('sMem').textContent=mb(mem.used);
+  const nd=nextRoundDigits(digits,mem);
+  setStatus('Computing '+fmt(nd)+' digits…');
+  request(nd);
+}
+function onFail(err){setStatus('Worker failed ('+(err&&err.name||'error')+') — retrying on main thread');worker=null;request(Math.floor(all.length*GROW));}
+
+function request(digits){
+  if(worker){worker.postMessage({digits});}
+  else{fallbackTimer=setTimeout(()=>{
+    try{const t=performance.now();const s=computePi(digits);onRound(s,digits,heap(),(performance.now()-t)/1000);}
+    catch(e){setStatus('crashing…');throw e;}
+  },30);}
+}
+
+function start(){
+  try{
+    const src=[bs,isqrt,computePi,heap].map(f=>f.toString()).join('\n')+`
+onmessage=function(e){const d=e.data.digits;try{const t=performance.now();const s=computePi(d);
+postMessage({ok:1,s:s,d:d,mem:heap(),secs:(performance.now()-t)/1000});}catch(err){postMessage({ok:0,name:err&&err.name});}}`;
+    const url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
+    worker=new Worker(url);
+    worker.onmessage=e=>{const m=e.data;if(m.ok)onRound(m.s,m.d,m.mem,m.secs);else onFail({name:m.name});};
+    worker.onerror=()=>{worker=null;setStatus('Worker blocked — running on main thread');request(1000);};
+  }catch(e){worker=null;}
+  setStatus('Computing 1,000 digits…');
+  request(1000);
+}
+
+// ---- Typing loop (no trimming, one DOM node per chunk) ----
+let screen=document.querySelector('.screen'),cur=cursor();
+function frame(){
+  if(stopped)return;
+  if(!paused&&shown<all.length){
+    const backlog=all.length-shown;
+    const n=Math.min(backlog,Math.max(2,Math.ceil(backlog/90)));
+    let chunk=all.substr(shown,n);
+    if(shown===0&&chunk.length>1)chunk=chunk[0]+'.'+chunk.slice(1);
+    else if(shown===0)chunk=chunk+'';
+    const stick=screen.scrollTop+screen.clientHeight>=screen.scrollHeight-40;
+    cur.remove();
+    out.appendChild(document.createTextNode(chunk));
+    out.appendChild(cur);
+    if(stick)screen.scrollTop=screen.scrollHeight;
+    shown+=n;
+    $('sShown').textContent=fmt(Math.max(0,shown-1));
+  }
+  $('sTime').textContent=((performance.now()-t0)/1000).toFixed(1)+'s';
+  requestAnimationFrame(frame);
+}
+function cursor(){const s=document.createElement('span');s.className='cur';return s;}
+
+$('bPause').onclick=()=>{paused=!paused;$('bPause').textContent=paused?'Resume typing':'Pause typing';};
+$('bStop').onclick=()=>{
+  stopped=true;if(worker)worker.terminate();clearTimeout(fallbackTimer);
+  setStatus('Stopped');
+};
+start();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
