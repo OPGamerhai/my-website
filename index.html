@@ -92,6 +92,28 @@
     animation: blink 2.2s ease-in-out infinite;
   }
   @keyframes blink { 50% { box-shadow: 0 0 30px rgba(255,46,147,.7), inset 0 0 14px rgba(255,46,147,.25); border-color: var(--magenta); } }
+  .pi-box {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    padding: .6em 1.1em;
+    color: var(--cyan);
+    text-decoration: none;
+    font-family: "Orbitron", sans-serif;
+    font-weight: 900;
+    line-height: 1;
+    border: 2px solid var(--magenta);
+    border-radius: 8px;
+    background: rgba(10,7,20,.6);
+    box-shadow: 0 0 16px rgba(255,46,147,.45);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .pi-box:hover, .pi-box:focus-visible {
+    transform: scale(1.05);
+    box-shadow: 0 0 28px rgba(255,46,147,.8);
+    outline: none;
+  }
+  .pi-box span { display: inline-block; }
   footer {
     position: relative;
     z-index: 1;
@@ -110,8 +132,23 @@
 <body>
   <main>
     <h1>The Website of Arnav Gupta</h1>
+    <a class="pi-box" id="pi" href="Pi%20Calculator.html" aria-label="Open Pi Calculator">3.1415.....</a>
     <p class="coming">More games about to come</p>
   </main>
+  <script>
+    // Shrink each character a little more than the one before it
+    (function () {
+      var el = document.getElementById("pi");
+      var text = el.textContent;
+      el.textContent = "";
+      for (var i = 0; i < text.length; i++) {
+        var s = document.createElement("span");
+        s.textContent = text[i];
+        s.style.fontSize = "calc(clamp(1.8rem, 8vw, 3.6rem) * " + Math.max(0.2, 1 - i * 0.09).toFixed(2) + ")";
+        el.appendChild(s);
+      }
+    })();
+  </script>
   <footer>&copy; OP_Gamer_hai</footer>
 </body>
 </html>
