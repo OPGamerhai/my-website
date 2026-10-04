@@ -94,9 +94,11 @@
   @keyframes blink { 50% { box-shadow: 0 0 30px rgba(255,46,147,.7), inset 0 0 14px rgba(255,46,147,.25); border-color: var(--magenta); } }
   .pi-box {
     display: inline-flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: center;
-    padding: .6em 1.1em;
+    width: clamp(130px, 40vw, 240px);
+    aspect-ratio: 4 / 3;
+    padding: .5rem;
     color: var(--cyan);
     text-decoration: none;
     font-family: "Orbitron", sans-serif;
@@ -114,6 +116,39 @@
     outline: none;
   }
   .pi-box span { display: inline-block; }
+  .games {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+  }
+  .bird-box {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .3rem;
+    width: clamp(130px, 40vw, 240px);
+    aspect-ratio: 4 / 3;
+    padding: .5rem;
+    color: var(--cyan);
+    text-decoration: none;
+    font-family: "Orbitron", sans-serif;
+    font-weight: 600;
+    font-size: clamp(.75rem, 2.4vw, .95rem);
+    border: 2px solid var(--cyan);
+    border-radius: 8px;
+    background: rgba(10,7,20,.6);
+    box-shadow: 0 0 16px rgba(25,240,255,.45);
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .bird-box svg { flex: 1 1 auto; min-height: 0; width: 100%; height: auto; display: block; }
+  .bird-box:hover, .bird-box:focus-visible {
+    transform: scale(1.05);
+    box-shadow: 0 0 28px rgba(25,240,255,.85);
+    outline: none;
+  }
   footer {
     position: relative;
     z-index: 1;
@@ -132,7 +167,32 @@
 <body>
   <main>
     <h1>The Website of Arnav Gupta</h1>
-    <a class="pi-box" id="pi" href="Pi%20Calculator.html" aria-label="Open Pi Calculator">3.1415.....</a>
+    <div class="games">
+      <a class="pi-box" id="pi" href="Pi%20Calculator.html" aria-label="Open Pi Calculator">3.1415.....</a>
+      <a class="bird-box" href="whirly-bird.html" aria-label="Play Whirly Bird">
+        <svg viewBox="0 0 130 110" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- platform -->
+          <rect x="6" y="82" width="118" height="22" rx="11" fill="#1f6b2e"/>
+          <rect x="6" y="80" width="118" height="19" rx="9.5" fill="#3fae4f"/>
+          <rect x="14" y="83" width="102" height="4" rx="2" fill="#6fd47c" opacity=".7"/>
+          <!-- body -->
+          <circle cx="62" cy="58" r="27" fill="#f9b21d"/>
+          <ellipse cx="50" cy="66" rx="14" ry="11" fill="#f28c1e"/>
+          <!-- beak -->
+          <path d="M87 57 L106 63 L87 69 Z" fill="#e8465a" stroke="#e8465a" stroke-width="2" stroke-linejoin="round"/>
+          <!-- eye -->
+          <circle cx="76" cy="52" r="8" fill="#fff"/>
+          <circle cx="78.5" cy="52" r="3.6" fill="#1b1b1b"/>
+          <!-- propeller hat -->
+          <path d="M42 40 Q62 16 82 38 Q62 32 42 40 Z" fill="#1f8a96"/>
+          <rect x="60" y="22" width="4" height="8" fill="#176f79"/>
+          <ellipse cx="52" cy="21" rx="10" ry="3" fill="#f6a23a"/>
+          <ellipse cx="72" cy="21" rx="10" ry="3" fill="#f6a23a"/>
+          <circle cx="62" cy="21" r="3" fill="#176f79"/>
+        </svg>
+        Whirly Bird
+      </a>
+    </div>
     <p class="coming">More games about to come</p>
   </main>
   <script>
