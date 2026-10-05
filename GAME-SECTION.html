@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Game Section</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  font-family:'Fredoka','Trebuchet MS',system-ui,sans-serif;color:#fff;
+  background:linear-gradient(120deg,#1b0b4a,#0b3a6e,#0a7a74,#5a1a8c,#1b0b4a);
+  background-size:400% 400%;animation:bg 18s ease infinite;
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden;
+  padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);
+}
+@keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+/* moving grid floor */
+.grid{position:fixed;left:-50%;right:-50%;bottom:-10%;height:55vh;z-index:0;pointer-events:none;
+  background:
+   linear-gradient(rgba(120,255,240,.28) 2px,transparent 2px) 0 0/60px 60px,
+   linear-gradient(90deg,rgba(120,255,240,.28) 2px,transparent 2px) 0 0/60px 60px;
+  transform:perspective(380px) rotateX(62deg);transform-origin:top;
+  animation:gridMove 2.4s linear infinite;
+  -webkit-mask-image:linear-gradient(transparent,#000 40%);mask-image:linear-gradient(transparent,#000 40%)}
+@keyframes gridMove{to{background-position:0 60px,60px 0}}
+
+canvas#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+/* floating game shapes */
+.float{position:fixed;z-index:0;pointer-events:none;opacity:.35;animation:drift linear infinite}
+.float.s1{left:8%;top:78%;width:46px;height:46px;border:4px solid #ffd54a;border-radius:50%;animation-duration:14s}
+.float.s2{left:82%;top:85%;width:40px;height:40px;background:#ff5d8f;border-radius:10px;animation-duration:11s;animation-delay:-4s}
+.float.s3{left:30%;top:90%;width:0;height:0;border:24px solid transparent;border-bottom:42px solid #5dffb0;animation-duration:16s;animation-delay:-8s}
+.float.s4{left:65%;top:95%;width:34px;height:34px;border:4px solid #7ab8ff;transform:rotate(45deg);animation-duration:13s;animation-delay:-2s}
+.float.s5{left:48%;top:88%;width:26px;height:26px;background:#ffd54a;border-radius:50%;animation-duration:9s;animation-delay:-6s}
+.float.s6{left:92%;top:92%;width:50px;height:50px;border:4px dashed #ff9a3c;border-radius:50%;animation-duration:17s;animation-delay:-10s}
+@keyframes drift{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(-120vh) rotate(540deg)}}
+
+main{position:relative;z-index:2;width:100%;max-width:960px;padding:48px 20px 24px;display:flex;flex-direction:column;align-items:center;flex:1}
+
+h1{font-size:clamp(2.4rem,9vw,5rem);font-weight:700;letter-spacing:.04em;text-transform:uppercase;text-align:center;line-height:1.05;
+  color:#ffd54a;text-shadow:0 4px 0 rgba(0,0,0,.4),0 0 24px rgba(255,213,74,.55);
+  animation:hue 6s linear infinite}
+h1 span{display:inline-block;animation:hop 2.2s ease-in-out infinite}
+h1 span:nth-child(2){animation-delay:.08s}h1 span:nth-child(3){animation-delay:.16s}h1 span:nth-child(4){animation-delay:.24s}
+h1 span:nth-child(5){animation-delay:.32s}h1 span:nth-child(6){animation-delay:.4s}h1 span:nth-child(7){animation-delay:.48s}
+h1 span:nth-child(8){animation-delay:.56s}h1 span:nth-child(9){animation-delay:.64s}h1 span:nth-child(10){animation-delay:.72s}
+h1 span:nth-child(11){animation-delay:.8s}h1 span:nth-child(12){animation-delay:.88s}h1 span:nth-child(13){animation-delay:.96s}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+@keyframes hop{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-12px)}}
+
+.tag{margin-top:10px;font-size:1.1rem;opacity:.85;text-align:center}
+
+.games{margin-top:44px;display:flex;flex-wrap:wrap;gap:28px;justify-content:center;width:100%}
+
+.card{
+  position:relative;width:min(100%,260px);text-decoration:none;color:#fff;
+  background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.35);border-radius:28px;
+  padding:22px 18px 20px;text-align:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  transition:transform .25s,box-shadow .25s;animation:pulseGlow 3s ease-in-out infinite;overflow:hidden;
+  -webkit-tap-highlight-color:transparent}
+.card::before{content:"";position:absolute;top:0;left:-80%;width:50%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.35),transparent);
+  transform:skewX(-20deg);animation:sweep 3.5s ease-in-out infinite}
+@keyframes sweep{0%,60%{left:-80%}100%{left:140%}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 18px rgba(255,213,74,.35)}50%{box-shadow:0 0 38px rgba(255,93,143,.6)}}
+.card:hover,.card:focus-visible{transform:translateY(-8px) scale(1.04) rotate(-1deg);outline:none}
+.card:active{transform:scale(.97)}
+.card h2{margin-top:14px;font-size:1.5rem}
+.card p{font-size:.95rem;opacity:.85;margin-top:2px}
+.play{display:inline-block;margin-top:14px;padding:8px 26px;border-radius:999px;background:#ffd54a;color:#3a1d00;font-weight:700;
+  box-shadow:0 4px 0 #c28a00;animation:wob 1.6s ease-in-out infinite}
+@keyframes wob{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+
+/* bird icon */
+.icon{width:150px;height:150px;margin:0 auto;display:block}
+.bird{animation:bob 1.8s ease-in-out infinite;transform-origin:center}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.prop{transform-box:fill-box;transform-origin:center;animation:spin .35s linear infinite}
+@keyframes spin{to{transform:scaleX(-1)}}
+.prop{animation:flap .25s ease-in-out infinite alternate}
+@keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.25)}}
+
+.soon{margin-top:46px;font-size:1.25rem;text-align:center;padding:10px 22px;border-radius:999px;background:rgba(0,0,0,.3);border:2px dashed rgba(255,255,255,.4)}
+.soon::after{content:"";display:inline-block;width:.9em;text-align:left;animation:dots 1.4s steps(4) infinite;overflow:hidden;vertical-align:bottom}
+@keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+.soon{animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+footer{position:relative;z-index:2;width:100%;text-align:center;padding:18px 16px 22px;font-size:1rem;
+  background:linear-gradient(transparent,rgba(0,0,0,.45))}
+footer .c{display:inline-block;animation:glow 2.4s ease-in-out infinite}
+@keyframes glow{0%,100%{text-shadow:0 0 4px #fff}50%{text-shadow:0 0 14px #5dffb0,0 0 24px #7ab8ff}}
+
+/* cursor follower */
+#cursor,.trail{position:fixed;top:0;left:0;border-radius:50%;pointer-events:none;opacity:0;will-change:transform;transition:opacity .25s}
+#cursor{width:20px;height:20px;z-index:99;
+  background:radial-gradient(circle at 35% 35%,#fff,#5dffb0 60%,#00b3a4);
+  box-shadow:0 0 12px #5dffb0,0 0 26px rgba(93,255,176,.55)}
+.trail{width:12px;height:12px;z-index:98;background:#7ab8ff;filter:blur(1px)}
+@media (hover:hover) and (pointer:fine){html,body,a{cursor:none}}
+
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<canvas id="fx"></canvas>
+<i class="float s1"></i><i class="float s2"></i><i class="float s3"></i><i class="float s4"></i><i class="float s5"></i><i class="float s6"></i>
+
+<main>
+  <h1 aria-label="GAME SECTION"><span>G</span><span>a</span><span>m</span><span>e</span> <span>S</span><span>e</span><span>c</span><span>t</span><span>i</span><span>o</span><span>n</span></h1>
+  <p class="tag">Pick a game and jump in</p>
+
+  <div class="games">
+    <a class="card" href="GAME/whirly-bird.html" aria-label="Play Whirly Bird">
+      <svg class="icon" viewBox="0 0 160 160" aria-hidden="true">
+        <rect x="18" y="116" width="124" height="26" rx="13" fill="#1e7a2b"/>
+        <rect x="18" y="116" width="124" height="16" rx="8" fill="#37b34a"/>
+        <g class="bird">
+          <ellipse cx="78" cy="78" rx="38" ry="36" fill="#ffb21f"/>
+          <ellipse cx="66" cy="96" rx="24" ry="14" fill="#ffc94d" opacity=".6"/>
+          <path d="M112 78 L134 84 L112 90 Z" fill="#e0384a"/>
+          <circle cx="96" cy="68" r="11" fill="#fff"/>
+          <circle cx="98" cy="68" r="5" fill="#222"/>
+          <path d="M60 46 Q78 36 96 46 Z" fill="#2fa14a"/>
+          <rect x="76" y="34" width="4" height="12" fill="#1e7a2b"/>
+          <ellipse class="prop" cx="78" cy="32" rx="28" ry="4" fill="#3b8f5a"/>
+        </g>
+      </svg>
+      <h2>Whirly Bird</h2>
+      <p>Hop, spin and don't fall</p>
+      <span class="play">PLAY</span>
+    </a>
+  </div>
+
+  <div class="soon">More games about to come</div>
+</main>
+
+<footer><span class="c">&copy; OP_Gamer_hai</span></footer>
+
+<div id="cursor"></div>
+
+<script>
+(function(){
+  var cur=document.getElementById('cursor');
+  var mx=0,my=0,cx=0,cy=0,sc=1,tsc=1,seen=false,down=false;
+  var N=5,speeds=[15,11,8,6,4.5],trail=[];
+  for(var i=0;i<N;i++){var t=document.createElement('div');t.className='trail';document.body.appendChild(t);trail.push({el:t,x:0,y:0})}
+  function show(v){cur.style.opacity=v?1:0;trail.forEach(function(o,i){o.el.style.opacity=v?(.55*(1-i/N)):0})}
+  function move(e){
+    mx=e.clientX;my=e.clientY;
+    if(!seen){cx=mx;cy=my;trail.forEach(function(o){o.x=mx;o.y=my});seen=true}
+    show(true);
+    tsc=down?.7:(e.target.closest&&e.target.closest('a')?1.9:1);
+  }
+  addEventListener('pointermove',move,{passive:true});
+  addEventListener('pointerdown',function(e){down=true;move(e)});
+  addEventListener('pointerup',function(e){down=false;move(e);if(e.pointerType==='touch')setTimeout(function(){show(false)},500)});
+  document.addEventListener('pointerleave',function(){show(false)});
+  document.documentElement.addEventListener('mouseleave',function(){show(false)});
+
+var cv=document.getElementById('fx'),ctx=cv.getContext('2d'),W,H,stars=[],bursts=[];
+  function size(){var d=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0);
+    stars=[];var n=Math.min(110,Math.floor(W*H/12000));
+    for(var i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*2+.5,s:Math.random()*.4+.1,p:Math.random()*6})}
+  size();addEventListener('resize',size);
+
+  function spark(x,y){for(var i=0;i<14;i++){var a=Math.random()*6.28,v=Math.random()*3+1;
+    bursts.push({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,l:1,c:'hsl('+(Math.random()*360|0)+',100%,70%)'})}}
+  addEventListener('click',function(e){spark(e.clientX,e.clientY)});
+  addEventListener('touchstart',function(e){var t=e.touches[0];spark(t.clientX,t.clientY)},{passive:true});
+
+  var last=0;
+  function loop(t){
+    var dt=Math.min((t-last)/1000||.016,.05);last=t;
+    var k=1-Math.exp(-dt*28);
+    cx+=(mx-cx)*k;cy+=(my-cy)*k;
+    sc+=(tsc-sc)*(1-Math.exp(-dt*14));
+    cur.style.transform='translate3d('+cx.toFixed(2)+'px,'+cy.toFixed(2)+'px,0) translate(-50%,-50%) scale('+sc.toFixed(3)+')';
+    var px=cx,py=cy;
+    trail.forEach(function(o,i){
+      var kk=1-Math.exp(-dt*speeds[i]);
+      o.x+=(px-o.x)*kk;o.y+=(py-o.y)*kk;
+      o.el.style.transform='translate3d('+o.x.toFixed(2)+'px,'+o.y.toFixed(2)+'px,0) translate(-50%,-50%) scale('+(1-i/N*.6).toFixed(2)+')';
+      px=o.x;py=o.y;
+    });
+
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(function(s){
+      s.y-=s.s;if(s.y<-4){s.y=H+4;s.x=Math.random()*W}
+      var a=.4+.6*Math.abs(Math.sin(t/700+s.p));
+      ctx.fillStyle='rgba(255,255,255,'+a+')';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,6.28);ctx.fill();
+    });
+    for(var i=bursts.length-1;i>=0;i--){var b=bursts[i];b.x+=b.vx;b.y+=b.vy;b.vy+=.06;b.l-=.025;
+      if(b.l<=0){bursts.splice(i,1);continue}
+      ctx.globalAlpha=b.l;ctx.fillStyle=b.c;ctx.beginPath();ctx.arc(b.x,b.y,3,0,6.28);ctx.fill();ctx.globalAlpha=1}
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
